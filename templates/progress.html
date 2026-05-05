@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiến Độ - OThanks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">🌏 OThanks</div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Trang chủ</a></li>
+                <li><a href="/flashcard" class="nav-link">Flashcard</a></li>
+                <li><a href="/practice" class="nav-link">Bài tập</a></li>
+                <li><a href="/progress" class="nav-link active">Tiến độ</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>📊 Theo Dõi Tiến Độ</h1>
+
+            <!-- Statistics Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div class="stat-info">
+                        <h3>Tổng từ vựng</h3>
+                        <p class="stat-value" id="totalVocab">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>Đã học</h3>
+                        <p class="stat-value" id="learned">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📖</div>
+                    <div class="stat-info">
+                        <h3>Đang học</h3>
+                        <p class="stat-value" id="learning">0</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-info">
+                        <h3>Bài tập tổng</h3>
+                        <p class="stat-value" id="totalExercises">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Progress -->
+            <div class="progress-section">
+                <h2>Tỷ lệ hoàn thành</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <p class="progress-text" id="progressPercent">0%</p>
+            </div>
+
+            <!-- Vocabulary Details Table -->
+            <div class="table-section">
+                <h2>Chi tiết từ vựng</h2>
+                <div class="table-container">
+                    <table class="vocab-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tiếng Trung</th>
+                                <th>Pinyin</th>
+                                <th>Dịch</th>
+                                <th>✅ Đúng</th>
+                                <th>❌ Sai</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vocabTable">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        async function loadProgressData() {
+            // Load statistics
+            const statsResponse = await fetch('/api/stats');
+            const stats = await statsResponse.json();
+            
+            document.getElementById('totalVocab').textContent = stats.total_vocabulary;
+            document.getElementById('learned').textContent = stats.learned;
+            document.getElementById('learning').textContent = stats.learning;
+            document.getElementById('totalExercises').textContent = stats.total_exercises;
+            document.getElementById('progressFill').style.width = stats.progress_percentage + '%';
+            document.getElementById('progressPercent').textContent = stats.progress_percentage + '%';
+
+            // Load vocabulary details
+            const vocabResponse = await fetch('/api/vocabulary');
+            const vocabularies = await vocabResponse.json();
+            
+            const tbody = document.getElementById('vocabTable');
+            tbody.innerHTML = '';
+            
+            vocabularies.forEach((vocab, index) => {
+                const status = (vocab.correct_count || 0) >= 3 ? '✅ Đã học' : '📖 Đang học';
+                const statusClass = (vocab.correct_count || 0) >= 3 ? 'status-learned' : 'status-learning';
+                
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${vocab.chinese}</strong></td>
+                        <td>${vocab.pinyin}</td>
+                        <td>${vocab.english}</td>
+                        <td class="correct">${vocab.correct_count || 0}</td>
+                        <td class="wrong">${vocab.wrong_count || 0}</td>
+                        <td><span class="status ${statusClass}">${status}</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProgressData);
+    </script>
+</body>
+</html>
