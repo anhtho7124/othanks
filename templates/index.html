@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OThanks - Học Tiếng Trung</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">🌏 OThanks</div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link active">Trang chủ</a></li>
+                <li><a href="/flashcard" class="nav-link">Flashcard</a></li>
+                <li><a href="/practice" class="nav-link">Bài tập</a></li>
+                <li><a href="/progress" class="nav-link">Tiến độ</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Hero Section -->
+            <div class="hero">
+                <h1>🌏 OThanks</h1>
+                <p>Ứng dụng học tiếng Trung của riêng bạn</p>
+                <p style="font-size: 14px; color: #666; margin-top: 10px;">Flashcard • Bài tập • Theo dõi tiến độ</p>
+            </div>
+
+            <!-- Dashboard / Statistics -->
+            <div class="dashboard">
+                <h2>📊 Thống Kê Học Tập Hôm Nay</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📚</div>
+                        <div class="stat-info">
+                            <h3>Tổng từ vựng</h3>
+                            <p class="stat-value" id="totalVocab">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3>Đã học</h3>
+                            <p class="stat-value" id="learned">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">📖</div>
+                        <div class="stat-info">
+                            <h3>Đang học</h3>
+                            <p class="stat-value" id="learning">0</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-info">
+                            <h3>Tỷ lệ</h3>
+                            <p class="stat-value" id="percentage">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-section">
+                    <h3>Tiến độ hoàn thành</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">0%</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2>🚀 Bắt Đầu Học</h2>
+                
+                <div class="action-grid">
+                    <a href="/flashcard" class="action-card">
+                        <div class="action-icon">🎴</div>
+                        <h3>Flashcard</h3>
+                        <p>Học từ vựng qua thẻ ghi nhớ</p>
+                    </a>
+
+                    <a href="/practice" class="action-card">
+                        <div class="action-icon">✏️</div>
+                        <h3>Bài Tập</h3>
+                        <p>4 loại bài tập luyện tập</p>
+                    </a>
+
+                    <a href="/progress" class="action-card">
+                        <div class="action-icon">📊</div>
+                        <h3>Tiến Độ</h3>
+                        <p>Theo dõi chi tiết học tập</p>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="features">
+                <h2>✨ Tính Năng</h2>
+                
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <span class="feature-icon">🎴</span>
+                        <h4>Flashcard Thông Minh</h4>
+                        <p>Bấp để xem dịch, đánh dấu đã nhớ hoặc chưa nhớ</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">✏️</span>
+                        <h4>4 Bài Tập Đa Dạng</h4>
+                        <p>Nhận dạng • Viết • Ghép cặp • Phát âm</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <h4>Theo Dõi Tiến Độ</h4>
+                        <p>Xem chi tiết từng từ vựng đã học</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">💾</span>
+                        <h4>Lưu Trữ Local</h4>
+                        <p>Dữ liệu được lưu an toàn trên máy bạn</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">📱</span>
+                        <h4>Responsive Design</h4>
+                        <p>Dùng được trên máy tính và điện thoại</p>
+                    </div>
+
+                    <div class="feature-item">
+                        <span class="feature-icon">🔒</span>
+                        <h4>Hoàn Toàn Riêng Tư</h4>
+                        <p>Không cần tạo tài khoản, hoàn toàn offline</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips">
+                <h2>💡 Mẹo Học Tập Hiệu Quả</h2>
+                <ul class="tips-list">
+                    <li><strong>Nhất quán:</strong> Học ít nhất 15-20 phút mỗi ngày</li>
+                    <li><strong>Lặp lại:</strong> Một từ cần trả lời đúng 3 lần để "đã học"</li>
+                    <li><strong>Đa dạng:</strong> Sử dụng cả Flashcard và Bài tập</li>
+                    <li><strong>Kiểm tra:</strong> Theo dõi tiến độ trong tab "Tiến độ"</li>
+                    <li><strong>Thêm từ:</strong> Mở app.py để thêm từ vựng mới</li>
+                </ul>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🌏 OThanks - Ứng dụng học tiếng Trung cá nhân của bạn</p>
+            <p style="font-size: 12px; color: #999; margin-top: 10px;">Được phát triển bằng Python + HTML/CSS/JS</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        async function loadDashboard() {
+            try {
+                // Load statistics
+                const statsResponse = await fetch('/api/stats');
+                const stats = await statsResponse.json();
+                
+                document.getElementById('totalVocab').textContent = stats.total_vocabulary;
+                document.getElementById('learned').textContent = stats.learned;
+                document.getElementById('learning').textContent = stats.learning;
+                document.getElementById('percentage').textContent = stats.progress_percentage + '%';
+                document.getElementById('progressFill').style.width = stats.progress_percentage + '%';
+                document.getElementById('progressText').textContent = stats.progress_percentage + '%';
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
