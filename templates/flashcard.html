@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard - OThanks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">🌏 OThanks</div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Trang chủ</a></li>
+                <li><a href="/flashcard" class="nav-link active">Flashcard</a></li>
+                <li><a href="/practice" class="nav-link">Bài tập</a></li>
+                <li><a href="/progress" class="nav-link">Tiến độ</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>🎴 Flashcard - Học Từ Vựng</h1>
+
+            <!-- Flashcard Container -->
+            <div class="flashcard-wrapper">
+                <div class="flashcard" id="flashcard" onclick="toggleFlip()">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <p class="flashcard-label">🇨🇳 Tiếng Trung</p>
+                            <h2 id="cardChinese">你好</h2>
+                            <p class="flashcard-pinyin" id="cardPinyin">(ni hao)</p>
+                        </div>
+                        <div class="flashcard-back">
+                            <p class="flashcard-label">🇺🇸 English</p>
+                            <h2 id="cardEnglish">Hello</h2>
+                            <p style="margin-top: 20px; font-size: 14px; color: #666;">← Bấm để xem tiếng Trung</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">1/8</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button class="btn btn-correct" onclick="markCorrect()">
+                    ✅ Đã nhớ
+                </button>
+                <button class="btn btn-wrong" onclick="markWrong()">
+                    ❌ Chưa nhớ
+                </button>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="button-group" style="margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="previousCard()">← Quay lại</button>
+                <button class="btn btn-secondary" onclick="nextCard()">Tiếp theo →</button>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-container" style="margin-top: 40px;">
+                <div class="stat-box">
+                    <span class="stat-icon">✅</span>
+                    <span>Đúng: <strong id="correctCount">0</strong></span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-icon">❌</span>
+                    <span>Sai: <strong id="wrongCount">0</strong></span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-icon">📊</span>
+                    <span>Tỷ lệ: <strong id="percentage">0%</strong></span>
+                </div>
+            </div>
+
+            <!-- Current Card Status -->
+            <div class="status-box" id="statusBox">
+                <p id="cardStatus">Bấm ✅ hoặc ❌ để ghi nhận</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        let vocabularies = [];
+        let currentIndex = 0;
+        let isFlipped = false;
+        let correctCount = 0;
+        let wrongCount = 0;
+
+        async function loadVocabulary() {
+            const response = await fetch('/api/vocabulary');
+            vocabularies = await response.json();
+            if (vocabularies.length === 0) {
+                alert('No vocabulary available!');
+                return;
+            }
+            displayCard();
+        }
+
+        function displayCard() {
+            if (vocabularies.length === 0) return;
+            
+            const vocab = vocabularies[currentIndex];
+            document.getElementById('cardChinese').textContent = vocab.chinese;
+            document.getElementById('cardPinyin').textContent = `(${vocab.pinyin})`;
+            document.getElementById('cardEnglish').textContent = vocab.english;
+            
+            // Reset flip state
+            isFlipped = false;
+            document.getElementById('flashcard').classList.remove('flipped');
+            
+            // Update progress
+            updateProgress();
+            
+            // Update card status
+            const status = (vocab.correct_count || 0) >= 3 ? '✅ Đã học' : '📖 Đang học';
+            document.getElementById('cardStatus').textContent = `${status} - Đúng: ${vocab.correct_count || 0}, Sai: ${vocab.wrong_count || 0}`;
+        }
+
+        function toggleFlip() {
+            const card = document.getElementById('flashcard');
+            isFlipped = !isFlipped;
+            card.classList.toggle('flipped');
+        }
+
+        async function markCorrect() {
+            const vocab = vocabularies[currentIndex];
+            await updateVocabRecord(vocab.id, true);
+            correctCount++;
+            document.getElementById('correctCount').textContent = correctCount;
+            updatePercentage();
+            nextCard();
+        }
+
+        async function markWrong() {
+            const vocab = vocabularies[currentIndex];
+            await updateVocabRecord(vocab.id, false);
+            wrongCount++;
+            document.getElementById('wrongCount').textContent = wrongCount;
+            updatePercentage();
+            nextCard();
+        }
+
+        async function updateVocabRecord(vocabId, isCorrect) {
+            const response = await fetch(`/api/vocabulary/${vocabId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_correct: isCorrect })
+            });
+            
+            if (response.ok) {
+                const updated = await response.json();
+                vocabularies[currentIndex] = updated;
+            }
+        }
+
+        function nextCard() {
+            currentIndex = (currentIndex + 1) % vocabularies.length;
+            displayCard();
+        }
+
+        function previousCard() {
+            currentIndex = (currentIndex - 1 + vocabularies.length) % vocabularies.length;
+            displayCard();
+        }
+
+        function updateProgress() {
+            const progress = ((currentIndex + 1) / vocabularies.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${currentIndex + 1}/${vocabularies.length}`;
+        }
+
+        function updatePercentage() {
+            const total = correctCount + wrongCount;
+            const percentage = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+            document.getElementById('percentage').textContent = percentage + '%';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadVocabulary);
+    </script>
+</body>
+</html>
