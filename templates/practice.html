@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài tập - OThanks</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">🌏 OThanks</div>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Trang chủ</a></li>
+                <li><a href="/flashcard" class="nav-link">Flashcard</a></li>
+                <li><a href="/practice" class="nav-link active">Bài tập</a></li>
+                <li><a href="/progress" class="nav-link">Tiến độ</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>✏️ Bài Tập</h1>
+
+            <!-- Exercise Type Selector -->
+            <div class="exercise-selector">
+                <button class="exercise-btn active" onclick="switchExercise('recognition')">
+                    🎯 Nhận dạng
+                </button>
+                <button class="exercise-btn" onclick="switchExercise('writing')">
+                    ✍️ Viết
+                </button>
+                <button class="exercise-btn" onclick="switchExercise('matching')">
+                    🔗 Ghép cặp
+                </button>
+                <button class="exercise-btn" onclick="switchExercise('pronunciation')">
+                    🎤 Phát âm
+                </button>
+            </div>
+
+            <!-- Exercise Container -->
+            <div class="exercise-container">
+                <!-- Recognition Exercise -->
+                <div id="recognition" class="exercise active">
+                    <h2>Chọn nghĩa đúng cho từ này</h2>
+                    <p class="exercise-question" id="recognition-question">你好</p>
+                    <div class="options" id="recognition-options">
+                        <!-- Options will be filled here -->
+                    </div>
+                    <button class="btn btn-primary" onclick="nextRecognition()">Tiếp theo</button>
+                </div>
+
+                <!-- Writing Exercise -->
+                <div id="writing" class="exercise">
+                    <h2>Viết từ Trung Quốc cho nghĩa này</h2>
+                    <p class="exercise-question" id="writing-question">Hello</p>
+                    <input type="text" id="writing-answer" placeholder="Nhập tiếng Trung...">
+                    <button class="btn btn-primary" onclick="checkWriting()">Kiểm tra</button>
+                    <p id="writing-feedback" style="margin-top: 20px; font-weight: bold;"></p>
+                </div>
+
+                <!-- Matching Exercise -->
+                <div id="matching" class="exercise">
+                    <h2>Ghép từ Trung với dịch Anh</h2>
+                    <div class="matching-grid">
+                        <div class="matching-col">
+                            <h4>Tiếng Trung</h4>
+                            <div id="matching-chinese" class="matching-items"></div>
+                        </div>
+                        <div class="matching-col">
+                            <h4>Dịch</h4>
+                            <div id="matching-english" class="matching-items"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="checkMatching()">Kiểm tra</button>
+                    <p id="matching-feedback" style="margin-top: 20px; font-weight: bold;"></p>
+                </div>
+
+                <!-- Pronunciation Exercise -->
+                <div id="pronunciation" class="exercise">
+                    <h2>Phát âm Pinyin của từ này</h2>
+                    <p class="exercise-question" id="pronunciation-question">你好</p>
+                    <p id="pronunciation-pinyin" style="font-size: 20px; margin: 20px 0;">ni hao</p>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-correct" onclick="playAudio()">🔊 Phát âm mẫu</button>
+                        <button class="btn btn-primary" onclick="nextPronunciation()">✅ Đã hiểu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row" style="margin-top: 40px;">
+                <div class="stat">
+                    <span>✅ Đúng:</span>
+                    <span id="exerciseCorrect">0</span>
+                </div>
+                <div class="stat">
+                    <span>❌ Sai:</span>
+                    <span id="exerciseWrong">0</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        let vocabularies = [];
+        let currentExerciseType = 'recognition';
+        let currentVocabIndex = 0;
+        let exerciseCorrect = 0;
+        let exerciseWrong = 0;
+
+        async function loadVocabulary() {
+            const response = await fetch('/api/vocabulary');
+            vocabularies = await response.json();
+            if (vocabularies.length === 0) {
+                alert('No vocabulary available!');
+                return;
+            }
+            loadRecognitionExercise();
+        }
+
+        function switchExercise(type) {
+            currentExerciseType = type;
+            document.querySelectorAll('.exercise').forEach(ex => ex.classList.remove('active'));
+            document.getElementById(type).classList.add('active');
+            document.querySelectorAll('.exercise-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (type === 'recognition') loadRecognitionExercise();
+            else if (type === 'writing') loadWritingExercise();
+            else if (type === 'matching') loadMatchingExercise();
+            else if (type === 'pronunciation') loadPronunciationExercise();
+        }
+
+        // Recognition Exercise
+        function loadRecognitionExercise() {
+            const vocab = vocabularies[currentVocabIndex];
+            document.getElementById('recognition-question').textContent = vocab.chinese;
+            
+            // Create options with 1 correct + 3 wrong
+            const options = [vocab];
+            while (options.length < 4) {
+                const random = vocabularies[Math.floor(Math.random() * vocabularies.length)];
+                if (!options.includes(random)) options.push(random);
+            }
+            
+            options.sort(() => Math.random() - 0.5);
+            
+            const optionsContainer = document.getElementById('recognition-options');
+            optionsContainer.innerHTML = '';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt.english;
+                btn.onclick = () => checkRecognition(opt.id === vocab.id);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkRecognition(isCorrect) {
+            if (isCorrect) {
+                exerciseCorrect++;
+                alert('✅ Đúng!');
+            } else {
+                exerciseWrong++;
+                alert('❌ Sai! Đáp án: ' + vocabularies[currentVocabIndex].english);
+            }
+            document.getElementById('exerciseCorrect').textContent = exerciseCorrect;
+            document.getElementById('exerciseWrong').textContent = exerciseWrong;
+            nextRecognition();
+        }
+
+        function nextRecognition() {
+            currentVocabIndex = (currentVocabIndex + 1) % vocabularies.length;
+            loadRecognitionExercise();
+        }
+
+        // Writing Exercise
+        function loadWritingExercise() {
+            const vocab = vocabularies[currentVocabIndex];
+            document.getElementById('writing-question').textContent = vocab.english;
+            document.getElementById('writing-answer').value = '';
+            document.getElementById('writing-feedback').textContent = '';
+        }
+
+        function checkWriting() {
+            const vocab = vocabularies[currentVocabIndex];
+            const answer = document.getElementById('writing-answer').value.trim();
+            const feedback = document.getElementById('writing-feedback');
+            
+            if (answer.toLowerCase() === vocab.chinese.toLowerCase()) {
+                exerciseCorrect++;
+                feedback.textContent = '✅ Chính xác!';
+                feedback.style.color = 'green';
+            } else {
+                exerciseWrong++;
+                feedback.textContent = `❌ Sai! Đáp án: ${vocab.chinese}`;
+                feedback.style.color = 'red';
+            }
+            
+            document.getElementById('exerciseCorrect').textContent = exerciseCorrect;
+            document.getElementById('exerciseWrong').textContent = exerciseWrong;
+            
+            setTimeout(() => {
+                currentVocabIndex = (currentVocabIndex + 1) % vocabularies.length;
+                loadWritingExercise();
+            }, 2000);
+        }
+
+        // Matching Exercise
+        function loadMatchingExercise() {
+            const shuffled = [...vocabularies].sort(() => Math.random() - 0.5);
+            
+            const chineseContainer = document.getElementById('matching-chinese');
+            const englishContainer = document.getElementById('matching-english');
+            chineseContainer.innerHTML = '';
+            englishContainer.innerHTML = '';
+            
+            shuffled.forEach((vocab, index) => {
+                const chineseBtn = document.createElement('button');
+                chineseBtn.className = 'matching-item';
+                chineseBtn.textContent = vocab.chinese;
+                chineseBtn.dataset.id = vocab.id;
+                chineseContainer.appendChild(chineseBtn);
+                
+                const englishBtn = document.createElement('button');
+                englishBtn.className = 'matching-item';
+                englishBtn.textContent = vocab.english;
+                englishBtn.dataset.id = vocab.id;
+                englishContainer.appendChild(englishBtn);
+            });
+        }
+
+        function checkMatching() {
+            const feedback = document.getElementById('matching-feedback');
+            feedback.textContent = '✅ Bài tập hoàn thành! Tốt lắm!';
+            feedback.style.color = 'green';
+        }
+
+        // Pronunciation Exercise
+        function loadPronunciationExercise() {
+            const vocab = vocabularies[currentVocabIndex];
+            document.getElementById('pronunciation-question').textContent = vocab.chinese;
+            document.getElementById('pronunciation-pinyin').textContent = vocab.pinyin;
+        }
+
+        function playAudio() {
+            const utterance = new SpeechSynthesisUtterance(document.getElementById('pronunciation-pinyin').textContent);
+            utterance.lang = 'zh-CN';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function nextPronunciation() {
+            exerciseCorrect++;
+            document.getElementById('exerciseCorrect').textContent = exerciseCorrect;
+            currentVocabIndex = (currentVocabIndex + 1) % vocabularies.length;
+            loadPronunciationExercise();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadVocabulary);
+    </script>
+</body>
+</html>
